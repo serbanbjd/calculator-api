@@ -1,6 +1,6 @@
 # 0003. One POST /v1/calculate endpoint with an op field
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-10
 - Deciders: Serban
 - Related requirements: FR-1, FR-2, FR-3, FR-5, FR-6

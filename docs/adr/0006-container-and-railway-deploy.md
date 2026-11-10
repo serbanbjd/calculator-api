@@ -1,6 +1,6 @@
 # 0006. Multi-stage Docker image, deployed on Railway
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-10
 - Deciders: Serban
 - Related requirements: NFR-3, NFR-4, FR-7

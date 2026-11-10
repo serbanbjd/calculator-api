@@ -1,6 +1,6 @@
 # 0002. Use rust_decimal for all arithmetic
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-10
 - Deciders: Serban
 - Related requirements: FR-2, FR-3, FR-4, FR-5

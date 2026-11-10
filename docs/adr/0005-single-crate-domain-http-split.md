@@ -1,6 +1,6 @@
 # 0005. Single crate with a pure domain module and a thin HTTP module
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-10
 - Deciders: Serban
 - Related requirements: FR-2 to FR-5, NFR-5

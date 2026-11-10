@@ -1,6 +1,6 @@
 # 0007. CI on GitHub Actions for every pull request
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-10
 - Deciders: Serban
 - Related requirements: all (quality gate)

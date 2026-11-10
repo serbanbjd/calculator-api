@@ -1,6 +1,6 @@
 # 0001. Use axum as the HTTP framework
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-10
 - Deciders: Serban
 - Related requirements: FR-1, FR-6, FR-7, NFR-2, NFR-5

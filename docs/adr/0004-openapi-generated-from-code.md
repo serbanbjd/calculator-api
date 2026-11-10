@@ -1,6 +1,6 @@
 # 0004. Generate OpenAPI from code with utoipa and serve Swagger UI
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-10
 - Deciders: Serban
 - Related requirements: FR-6
