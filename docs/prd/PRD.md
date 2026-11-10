@@ -12,8 +12,8 @@ predictable rounding and clear errors, so any client can delegate calculations w
 
 ## 2. Users and use cases
 
-- **Any HTTP client**: web frontends, backend services, scripts or a developer with `curl`. *(ASSUMPTION: no specific consumer was named.)*
-- **Developers exploring the API** through interactive documentation in the browser.
+- **Any HTTP client**: a UI, `curl`, scripts, other services or an AI agent calling it as a tool. The API makes no assumption about who calls it.
+- **Developers and AI agents exploring the API** through interactive documentation in the browser.
 - **The hosting platform** checking that the service is alive.
 
 Use cases:
@@ -36,8 +36,8 @@ It also serves its own API documentation and a health check.
 
 ## 4. Functional requirements
 
-All numbers in requests and responses are **JSON strings** containing a decimal number (for example `"0.1"`, `"-42"`).
-*(ASSUMPTION: strings only, so no client or parser converts them to binary floats on the way.)*
+All numbers in requests and responses are **JSON strings** containing a plain decimal number (for example `"0.1"`, `"-42"`).
+Strings only, so no client or parser converts them to binary floats on the way. Scientific notation (`"1e3"`) is rejected with `INVALID_NUMBER`.
 
 ### FR-1 Calculate endpoint
 
@@ -59,7 +59,7 @@ All numbers in requests and responses are **JSON strings** containing a decimal 
 | `multiply` | a × b | `"1.5"`, `"4"` → `"6"` |
 | `divide` | a ÷ b | `"1"`, `"3"` → `"0.3333333333333333333333333333"` |
 | `modulo` | remainder of a ÷ b, sign of `a` | `"10"`, `"3"` → `"1"` |
-| `power` | a raised to b | `"2"`, `"10"` → `"1024"` |
+| `power` | a raised to b; b must be an integer (`"2"`, `"0.5"` → `UNSUPPORTED_EXPONENT`) | `"2"`, `"10"` → `"1024"` |
 | `percent` | a percent of b, i.e. a × b ÷ 100 | `"15"`, `"200"` → `"30"` |
 
 Both `a` and `b` are required.
@@ -94,7 +94,7 @@ Every error uses one shape:
 | An operand is not a valid decimal number, or too precise | 400 | `INVALID_NUMBER` |
 | Divide or modulo by zero | 422 | `DIVISION_BY_ZERO` |
 | Square root of a negative number | 422 | `NEGATIVE_SQRT` |
-| `power` with a non-integer exponent | 422 | `UNSUPPORTED_EXPONENT` *(ASSUMPTION, see open questions)* |
+| `power` with a non-integer exponent | 422 | `UNSUPPORTED_EXPONENT` |
 | Result too large to represent | 422 | `OVERFLOW` |
 | Body larger than 16 KB | 413 | `PAYLOAD_TOO_LARGE` |
 
@@ -128,13 +128,13 @@ Error responses never expose internal details.
 - A user interface beyond Swagger UI.
 - Batch requests (many operations in one call).
 
-## 7. Assumptions and open questions
+## 7. Assumptions and decisions
 
-Assumptions are marked *(ASSUMPTION)* above. Open questions for the owner:
+Assumptions are marked *(ASSUMPTION)* above. Owner decisions on earlier open questions (2026-11-10):
 
-1. **Power with fractional exponents** (`2 ^ 0.5`): reject with `UNSUPPORTED_EXPONENT` (proposed), or compute an approximation?
-2. **Percent semantics**: "a percent of b" (proposed), or something else, such as percentage change?
-3. **Number format**: accept scientific notation (`"1e3"`)? Proposed: no.
+1. **Power with fractional exponents** (`2 ^ 0.5`) is rejected with `UNSUPPORTED_EXPONENT`, so every result is exact or rounded only per FR-4.
+2. **Percent** means "a percent of b" (`a × b ÷ 100`).
+3. **Scientific notation** (`"1e3"`) is not accepted.
 
 ## 8. Acceptance criteria
 
@@ -146,4 +146,5 @@ Assumptions are marked *(ASSUMPTION)* above. Open questions for the owner:
 - AC-6 (FR-6): `/docs` loads Swagger UI and `/openapi.json` lists `/v1/calculate` and `/health`.
 - AC-7 (FR-7, NFR-5): `/health` returns `200`, and the service runs on Railway using it.
 - AC-8 (NFR-4): `docker run -e PORT=9000` serves on port 9000.
+- AC-10 (FR-2, FR-5): `power` with `b = "0.5"` returns `422 UNSUPPORTED_EXPONENT`; operand `"1e3"` returns `400 INVALID_NUMBER`.
 - AC-9 (NFR-6): fuzzed or malformed bodies never produce a `5xx` or a crash.
