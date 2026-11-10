@@ -114,10 +114,9 @@ Error responses never expose internal details.
 
 - **NFR-1 Stateless**: no data is stored between requests; any instance can serve any request.
 - **NFR-2 Payload limit**: request bodies above 16 KB are rejected (FR-5).
-- **NFR-3 Performance**: p95 latency under 50 ms for `/v1/calculate`, measured inside the service. *(ASSUMPTION)*
-- **NFR-4 Portability**: runs as a single container image configured only through environment variables (`PORT`).
-- **NFR-5 Deployability**: deployable on Railway, using `/health` as its health check.
-- **NFR-6 No crashes on input**: no request, however malformed, can crash the service.
+- **NFR-3 Portability**: runs as a single container image configured only through environment variables (`PORT`).
+- **NFR-4 Deployability**: deployable on Railway, using `/health` as its health check.
+- **NFR-5 No crashes on input**: no request, however malformed, can crash the service.
 
 ## 6. Non-goals
 
@@ -144,7 +143,7 @@ Assumptions are marked *(ASSUMPTION)* above. Owner decisions on earlier open que
 - AC-4 (FR-4): `1 ÷ 3` returns 28 significant digits, rounded half-to-even.
 - AC-5 (FR-5): each row of the error table is reproducible with a request and returns that status and code.
 - AC-6 (FR-6): `/docs` loads Swagger UI and `/openapi.json` lists `/v1/calculate` and `/health`.
-- AC-7 (FR-7, NFR-5): `/health` returns `200`, and the service runs on Railway using it.
-- AC-8 (NFR-4): `docker run -e PORT=9000` serves on port 9000.
-- AC-9 (NFR-6): fuzzed or malformed bodies never produce a `5xx` or a crash.
+- AC-7 (FR-7, NFR-4): `/health` returns `200`, and the service runs on Railway using it.
+- AC-8 (NFR-3): `docker run -e PORT=9000` serves on port 9000.
+- AC-9 (NFR-5): fuzzed or malformed bodies never produce a `5xx` or a crash.
 - AC-10 (FR-2, FR-5): `power` with `b = "0.5"` returns `422 UNSUPPORTED_EXPONENT`; operand `"1e3"` returns `400 INVALID_NUMBER`.
