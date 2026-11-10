@@ -25,3 +25,7 @@ Generate with **utoipa**; serve `/openapi.json` and Swagger UI at **`/docs`** wi
 - Every handler and DTO carries `#[utoipa::path]` / `ToSchema`; `pr-review` treats a missing one as a blocker.
 - A test asserts `/openapi.json` contains `/v1/calculate` and `/health` (AC-6).
 - utoipa-swagger-ui downloads UI assets at build time; the Docker build needs network access (fine on Railway).
+
+## Implementation note (2026-11-10)
+The `vendored` feature of `utoipa-swagger-ui` is used, so the Swagger UI assets come from a crate instead of a
+download at build time. The Docker build therefore needs no extra network access beyond crates.io. The decision is unchanged.
