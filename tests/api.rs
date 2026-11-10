@@ -146,3 +146,46 @@ async fn wrong_method_uses_error_shape() {
     assert_eq!(status, StatusCode::METHOD_NOT_ALLOWED);
     assert_eq!(body["error"]["code"], "METHOD_NOT_ALLOWED");
 }
+
+// ---- FR-6: interactive documentation (AC-6) ----
+
+#[tokio::test]
+async fn ac6_openapi_lists_every_route() {
+    let (status, spec) = get("/openapi.json").await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(spec["paths"]["/v1/calculate"]["post"].is_object());
+    assert!(spec["paths"]["/health"]["get"].is_object());
+    let ops = &spec["components"]["schemas"]["OperationName"]["enum"];
+    assert_eq!(
+        ops,
+        &json!([
+            "add", "subtract", "multiply", "divide", "modulo", "power", "percent", "sqrt"
+        ])
+    );
+}
+
+#[tokio::test]
+async fn ac6_swagger_ui_is_served_at_docs() {
+    use axum::{body::Body, http::Request};
+    use tower::ServiceExt;
+    let res = calculator_api::app()
+        .oneshot(Request::get("/docs/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    assert_eq!(res.status(), StatusCode::OK);
+    let html = http_body_util::BodyExt::collect(res.into_body())
+        .await
+        .unwrap()
+        .to_bytes();
+    assert!(String::from_utf8_lossy(&html).contains("swagger-ui"));
+
+    let res = calculator_api::app()
+        .oneshot(Request::get("/docs").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    assert!(
+        res.status().is_success() || res.status().is_redirection(),
+        "{}",
+        res.status()
+    );
+}

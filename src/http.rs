@@ -10,6 +10,8 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use utoipa::{OpenApi, ToSchema};
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::domain::{self, CalcError, Operation};
 
@@ -21,32 +23,120 @@ pub fn app() -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/v1/calculate", post(calculate))
+        .merge(SwaggerUi::new("/docs").url("/openapi.json", ApiDoc::openapi()))
         .fallback(not_found)
         .method_not_allowed_fallback(method_not_allowed)
         .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
 }
 
+/// FR-6: the OpenAPI document, generated from the types and handlers below (ADR-0004).
+#[derive(OpenApi)]
+#[openapi(
+    info(
+        title = "Calculator API",
+        description = "Stateless calculator with exact decimal arithmetic. \
+            Numbers are JSON strings; 0.1 + 0.2 = 0.3."
+    ),
+    paths(calculate, health),
+    components(schemas(
+        CalculateRequest,
+        CalculateResponse,
+        OperationName,
+        ErrorBody,
+        ErrorDetail,
+        HealthResponse
+    ))
+)]
+pub struct ApiDoc;
+
+#[derive(Serialize, ToSchema)]
+struct HealthResponse {
+    #[schema(example = "ok")]
+    status: String,
+}
+
 /// FR-7: liveness check used by Railway.
+#[utoipa::path(
+    get,
+    path = "/health",
+    tag = "ops",
+    responses((status = 200, description = "Service is up", body = HealthResponse))
+)]
 async fn health() -> Json<Value> {
     Json(json!({ "status": "ok" }))
 }
 
-#[derive(Debug, Deserialize)]
+/// One calculation. Numbers are decimal strings (no scientific notation).
+#[derive(Debug, Deserialize, ToSchema)]
 #[serde(deny_unknown_fields)]
+#[schema(example = json!({ "op": "add", "a": "0.1", "b": "0.2" }))]
 pub struct CalculateRequest {
     /// Operation name; validated in the handler so an unknown value gets its own error code.
+    #[schema(value_type = OperationName)]
     pub op: String,
+    /// First operand.
+    #[schema(example = "0.1")]
     pub a: String,
+    /// Second operand: required for every operation except `sqrt`, which must not have it.
     #[serde(default)]
+    #[schema(example = "0.2")]
     pub b: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+/// Documentation-only enum of the accepted `op` values (FR-2, FR-3).
+/// `percent` is "a percent of b" (a × b ÷ 100); `power` needs an integer `b`.
+#[derive(ToSchema)]
+#[schema(rename_all = "lowercase")]
+#[allow(dead_code)]
+enum OperationName {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo,
+    Power,
+    Percent,
+    Sqrt,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CalculateResponse {
+    /// Exact result, rounded half-to-even only when it needs more than 28 significant digits.
+    #[schema(example = "0.3")]
     pub result: String,
 }
 
+/// FR-5 error envelope (documentation type; responses are built in `ApiError`).
+#[derive(ToSchema)]
+#[allow(dead_code)]
+struct ErrorBody {
+    error: ErrorDetail,
+}
+
+#[derive(ToSchema)]
+#[allow(dead_code)]
+struct ErrorDetail {
+    /// Stable machine-readable code.
+    #[schema(example = "DIVISION_BY_ZERO")]
+    code: String,
+    /// Human-readable explanation; may change.
+    #[schema(example = "Cannot divide by zero")]
+    message: String,
+}
+
 /// FR-1: compute one operation.
+#[utoipa::path(
+    post,
+    path = "/v1/calculate",
+    tag = "calculator",
+    request_body = CalculateRequest,
+    responses(
+        (status = 200, description = "Result", body = CalculateResponse),
+        (status = 400, description = "INVALID_REQUEST, UNKNOWN_OPERATION or INVALID_NUMBER", body = ErrorBody),
+        (status = 413, description = "PAYLOAD_TOO_LARGE: body over 16 KB", body = ErrorBody),
+        (status = 422, description = "DIVISION_BY_ZERO, NEGATIVE_SQRT, UNSUPPORTED_EXPONENT or OVERFLOW", body = ErrorBody),
+    )
+)]
 async fn calculate(
     body: Result<Json<serde_json::Map<String, Value>>, JsonRejection>,
 ) -> Result<Json<CalculateResponse>, ApiError> {
