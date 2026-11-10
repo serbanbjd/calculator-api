@@ -76,7 +76,7 @@ Only `a` is required; sending `b` is a validation error.
 
 - Results are exact whenever the exact result fits in 28 significant digits.
 - When it does not (for example `1 ÷ 3`, `sqrt(2)`), the result is rounded **half-to-even** to the available precision.
-- Results are returned without trailing zeros (`"2.50"` + `"0"` → `"2.5"`). *(ASSUMPTION)*
+- Results are returned without trailing zeros (`"2.50"` + `"0"` → `"2.5"`).
 - Input numbers with more precision than the service can represent are rejected, not silently rounded.
 
 ### FR-5 Errors
