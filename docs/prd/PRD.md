@@ -97,6 +97,8 @@ Every error uses one shape:
 | `power` with a non-integer exponent | 422 | `UNSUPPORTED_EXPONENT` |
 | Result too large to represent | 422 | `OVERFLOW` |
 | Body larger than 16 KB | 413 | `PAYLOAD_TOO_LARGE` |
+| Unknown route | 404 | `NOT_FOUND` |
+| Wrong HTTP method on a known route | 405 | `METHOD_NOT_ALLOWED` |
 
 Error responses never expose internal details.
 
