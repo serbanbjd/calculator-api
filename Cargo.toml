@@ -17,4 +17,5 @@ utoipa-swagger-ui = { version = "10", features = ["axum", "vendored"] }
 
 [dev-dependencies]
 http-body-util = "0.1"
+proptest = "1"
 tower = { version = "0.5", features = ["util"] }
