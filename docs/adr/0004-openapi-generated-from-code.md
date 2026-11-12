@@ -24,6 +24,8 @@ Generate with **utoipa**; serve `/openapi.json` and Swagger UI at **`/docs`** wi
 ## Consequences
 - Every handler and DTO carries `#[utoipa::path]` / `ToSchema`; `pr-review` treats a missing one as a blocker.
 - A test asserts `/openapi.json` contains `/v1/calculate` and `/health` (AC-6).
+- Schema examples are hand-written in attributes and can drift; a test posts the `CalculateRequest` example
+  from the served spec to the handler and expects `200` (added 2026-11-12).
 - utoipa-swagger-ui downloads UI assets at build time; the Docker build needs network access (fine on Railway).
 
 ## Implementation note (2026-11-10)

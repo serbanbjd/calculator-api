@@ -164,6 +164,21 @@ async fn ac6_openapi_lists_every_route() {
     );
 }
 
+/// The spec is generated from the request struct, but its example is hand-written.
+/// Posting that example back keeps the documented contract and the handler in sync.
+#[tokio::test]
+async fn ac6_openapi_request_example_is_accepted() {
+    let (_, spec) = get("/openapi.json").await;
+    let example = spec["components"]["schemas"]["CalculateRequest"]["example"].clone();
+    assert!(
+        example.is_object(),
+        "CalculateRequest has no example in the spec"
+    );
+    let (status, body) = calc(example).await;
+    assert_eq!(status, StatusCode::OK, "spec example rejected: {body}");
+    assert_eq!(body, json!({ "result": "0.3" }));
+}
+
 #[tokio::test]
 async fn ac6_swagger_ui_is_served_at_docs() {
     use axum::{body::Body, http::Request};
